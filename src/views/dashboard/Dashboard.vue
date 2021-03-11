@@ -7,6 +7,9 @@
       <col width="30%"/>
     </colgroup>
     <thead>
+    <input type="file" ref="avatarInput"
+           accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+           @change="fileChange">
     <tr>
       <th>项目</th>
       <th>测试结果</th>
@@ -124,6 +127,15 @@ const loading = '读取中……'
 const loading2 = '等待中……'
 const loading3 = '测试中……'
 const loading4 = '待输入……'
+
+const useUploadEffect = (showToast) => {
+  const fileChange = async () => {
+
+  }
+  return {
+    fileChange
+  }
+}
 
 const useReadEffect = (showToast) => {
   const finished = ref(loading2)
@@ -276,7 +288,11 @@ export default {
       readData,
       finished
     } = useReadEffect(showToast)
+    const {
+      fileChange
+    } = useUploadEffect(showToast)
     return {
+      fileChange,
       show,
       toastMessage,
       currentUser,
