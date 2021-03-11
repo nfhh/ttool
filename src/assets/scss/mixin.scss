@@ -1,0 +1,14 @@
+@mixin flex($hov:space-between,$col:center) {
+  display: flex;
+  justify-content: $hov;
+  align-items: $col;
+}
+
+@mixin wH($w:0,$h:0) {
+  width: $w;
+  height: $h;
+}
+
+@mixin border($bw:1px,$bc:$colorF,$bs:solid) {
+  border: $bw $bs $bc;
+}
