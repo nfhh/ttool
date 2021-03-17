@@ -7,7 +7,7 @@ switch (process.env.NODE_ENV) {
     break
   case 'production':
     baseURL = location.origin
-    APIURL = 'http://tool.terra-master.com/api/'
+    APIURL = 'http://toolx.terra-master.com/api/'
     break
   default:
     break

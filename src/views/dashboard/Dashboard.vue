@@ -15,7 +15,7 @@
     <tr>
       <th>项目</th>
       <th>标准</th>
-      <th>测试结果</th>
+      <th>读取结果</th>
       <th>判定</th>
     </tr>
     </thead>
@@ -97,34 +97,60 @@
       </td>
     </tr>
     <tr>
-      <td>外置 USB</td>
-      <td>{{ item['硬盘读最低'] && item['硬盘写最低'] ? `硬盘读最低:${item['硬盘读最低']} 硬盘写最低:${item['硬盘写最低']}` : loading5 }}</td>
-      <td class="wrapper">
-        <div class="wrapper__cell" v-for="(it,index) in u_disk.res" :key="index">
-          <div>{{ it }}</div>
-        </div>
-      </td>
-      <td><span :class="u_disk.is_ok">{{ u_disk.is_ok }}</span></td>
-    </tr>
-    <tr>
-      <td>网口</td>
+      <td>网口测试</td>
       <td>{{ item['网速最低'] || loading5 }}</td>
       <td class="wrapper">
         <div class="wrapper__cell" v-for="(it,index) in net.res" :key="index">
           <div>{{ it }}</div>
         </div>
       </td>
-      <td><span :class="net.is_ok">{{ net.is_ok }}</span></td>
+      <td>
+        <template v-if="net.is_ok.includes('PASS') || net.is_ok.includes('NG')">
+          <span :class="net.is_ok.includes('PASS') ? 'PASS' : 'NG'">{{ net.is_ok }}</span>
+        </template>
+        <span v-else>{{ net.is_ok }}</span>
+      </td>
     </tr>
     <tr>
-      <td>硬盘</td>
+      <td>内存测试</td>
+      <td>{{ item['测试内存'] || loading5 }}</td>
+      <td>{{ mem.res }}</td>
+      <td>
+        <template v-if="mem.is_ok.includes('PASS') || net.is_ok.includes('NG')">
+          <span :class="mem.is_ok.includes('PASS') ? 'PASS' : 'NG'">{{ mem.is_ok }}</span>
+        </template>
+        <span v-else>{{ mem.is_ok }}</span>
+      </td>
+    </tr>
+    <tr>
+      <td>USB测试</td>
+      <td>{{ item['USB读最低'] && item['USB写最低'] ? `USB读最低:${item['USB读最低']} USB写最低:${item['USB写最低']}` : loading5 }}</td>
+      <td class="wrapper">
+        <div class="wrapper__cell" v-for="(it,index) in u_disk.res" :key="index">
+          <div>{{ it }}</div>
+        </div>
+      </td>
+      <td>
+        <template v-if="u_disk.is_ok.includes('PASS') || net.is_ok.includes('NG')">
+          <span :class="u_disk.is_ok.includes('PASS') ? 'PASS' : 'NG'">{{ u_disk.is_ok }}</span>
+        </template>
+        <span v-else>{{ u_disk.is_ok }}</span>
+      </td>
+    </tr>
+    <tr>
+      <td>硬盘测试</td>
       <td>{{ item['硬盘读最低'] && item['硬盘写最低'] ? `硬盘读最低:${item['硬盘读最低']} 硬盘写最低:${item['硬盘写最低']}` : loading5 }}</td>
       <td class="wrapper">
         <div class="wrapper__cell" v-for="(it,index) in disk.res" :key="index">
           <div>{{ it }}</div>
         </div>
       </td>
-      <td><span :class="disk.is_ok">{{ disk.is_ok }}</span></td>
+      <td>
+        <template v-if="disk.is_ok.includes('PASS') || net.is_ok.includes('NG')">
+          <span :class="disk.is_ok.includes('PASS') ? 'PASS' : 'NG'">{{ disk.is_ok }}</span>
+        </template>
+        <span v-else>{{ disk.is_ok }}</span>
+      </td>
     </tr>
     <tr>
       <td colspan="3">结果</td>
@@ -160,7 +186,6 @@ const useUploadEffect = (showToast) => {
     })
     if (result?.code === 0) {
       showToast(result.message)
-      console.log(result.data)
       confData.item = result.data
     } else {
       showToast('上传配置失败')
@@ -221,17 +246,21 @@ const useReadEffect = (showToast) => {
       res: needRead,
       is_ok: needRead
     },
-    disk: {
-      res: [loading],
-      is_ok: loading2
-    },
     net: {
       res: [loading],
       is_ok: loading2
     },
+    mem: {
+      res: loading,
+      is_ok: loading2
+    },
     u_disk: {
       res: [loading],
-      is_ok: loading
+      is_ok: loading2
+    },
+    disk: {
+      res: [loading],
+      is_ok: loading2
     }
   })
 
@@ -278,17 +307,21 @@ const useReadEffect = (showToast) => {
       res: needRead,
       is_ok: needRead
     }
-    readData.disk = {
-      res: [loading],
-      is_ok: loading2
-    }
     readData.net = {
       res: [loading],
       is_ok: loading2
     }
+    readData.mem = {
+      res: loading,
+      is_ok: loading2
+    }
     readData.u_disk = {
       res: [loading],
-      is_ok: loading
+      is_ok: loading2
+    }
+    readData.disk = {
+      res: [loading],
+      is_ok: loading2
     }
     finished.value = loading2
     await getReadInfo()
@@ -309,6 +342,7 @@ const useReadEffect = (showToast) => {
       readData.fan_speed = data.fan_speed
       readData.mac = data.mac
       readData.net = data.net
+      readData.mem = data.mem
       readData.u_disk = data.u_disk
       readData.disk = data.disk
       await getTestOne()
@@ -333,6 +367,24 @@ const useReadEffect = (showToast) => {
   }
 
   const getTestTwo = async () => {
+    readData.mem.is_ok = loading3
+    const result = await get('test2.php?do=test_mem')
+    if (result?.code === 0 && result?.data) {
+      readData.mem.is_ok = result.data.res
+      await getTestThree()
+    }
+  }
+
+  const getTestThree = async () => {
+    readData.u_disk.is_ok = loading3
+    const result = await get('test2.php?do=test_udisk')
+    if (result?.code === 0 && result?.data) {
+      readData.u_disk.is_ok = result.data.res
+      await getTestFour()
+    }
+  }
+
+  const getTestFour = async () => {
     readData.disk.is_ok = loading3
     const result = await get('test2.php?do=test_disk')
     if (result?.code === 0 && result?.data) {
